@@ -1,0 +1,538 @@
+'\" t
+.\"     Title: ntpmon
+.\"    Author: [see the "AUTHOR(S)" section]
+.\" Generator: Asciidoctor 2.0.12
+.\"      Date: 2022-12-29
+.\"    Manual: NTPsec
+.\"    Source: NTPsec
+.\"  Language: English
+.\"
+.TH "NTPMON" "1" "2022-12-29" "NTPsec" "NTPsec"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+ntpmon \- real\-time NTP status monitor
+.SH "SYNOPSIS"
+.sp
+\f(CRntpmon\fP [\-dhnuV] [\-D lvl] [\-l logfile] [host]
+.SH "DESCRIPTION"
+.sp
+This program is a real\-time status monitor for NTP.  It presents the
+same information as the \fIpeers\fP, \fImrulist\fP, \fIrv\fP, and \fIcv\fP commands of
+ntpq(1), but using a split\-window display that also includes a
+status summary bar, and updates at intervals guaranteed to show status
+changes almost as soon as they occur.
+.sp
+(Specifically, the display begins updating once per second and
+adjusts itself to poll at twice the frequency of the shortest
+polling interval reported in the last peers response.)
+.sp
+The status bar includes the version string of the server being
+watched, the (local) time at which it was last updated, and the
+current query interval in parens following the date.
+.sp
+There is a detail\-display mode that dumps full information about a
+single selected peer in a tabular format that makes it relatively easy
+to see changing values. However, note that a default\-sized terminal
+emulator window (usually 25 lines) doesn\(cqt have enough room for the
+clock variables portion. The only fix for this is to resize your
+terminal.
+.sp
+^C cleanly terminates the program. Any keystroke will trigger a poll
+and update. A few single\-keystroke commands are also interpreted as
+commands.
+.sp
+If no hostname is specified on the command line, localhost is monitored.
+.sp
+Here\(cqs a breakdown of the peers display in the top window:
+.TS
+allbox tab(:);
+lt lt.
+T{
+.sp
+Variable
+T}:T{
+.sp
+Description
+T}
+T{
+.sp
+\f(CRtally\fP
+T}:T{
+.sp
+single\-character code indicating current value of the \f(CRselect\fP field
+of the \c
+.URL "decode.html#peer" "peer status word" ""
+T}
+T{
+.sp
+\f(CRremote\fP
+T}:T{
+.sp
+host name (or IP number) of peer
+T}
+T{
+.sp
+\f(CRrefid\fP
+T}:T{
+.sp
+association ID or \c
+.URL "decode.html#kiss" "kiss code" ""
+T}
+T{
+.sp
+\f(CRst\fP
+T}:T{
+.sp
+stratum
+T}
+T{
+.sp
+\f(CRt\fP
+T}:T{
+.sp
+\f(CRu\fP: unicast or manycast client,
+\f(CRl\fP: local (reference clock), \f(CRs\fP: symmetric (peer), server, \f(CRB\fP:
+broadcast server, 1\-8 NTS unicast with this number of cookies stored.
+T}
+T{
+.sp
+\f(CRwhen\fP
+T}:T{
+.sp
+sec/min/hr since last received packet
+T}
+T{
+.sp
+\f(CRpoll\fP
+T}:T{
+.sp
+poll interval (log2 s)
+T}
+T{
+.sp
+\f(CRreach\fP
+T}:T{
+.sp
+reach shift register (octal)
+T}
+T{
+.sp
+\f(CRdelay\fP
+T}:T{
+.sp
+roundtrip delay
+T}
+T{
+.sp
+\f(CRoffset\fP
+T}:T{
+.sp
+offset of server relative to this host
+T}
+T{
+.sp
+\f(CRjitter\fP
+T}:T{
+.sp
+jitter
+T}
+.TE
+.sp
+.sp
+The tally code is one of the following:
+.TS
+allbox tab(:);
+lt lt.
+T{
+.sp
+Code
+T}:T{
+.sp
+Description
+T}
+T{
+.sp
+
+T}:T{
+.sp
+discarded as not valid
+T}
+T{
+.sp
+\f(CRx\fP
+T}:T{
+.sp
+discarded by intersection algorithm
+T}
+T{
+.sp
+\f(CR.\fP
+T}:T{
+.sp
+discarded by table overflow (not used)
+T}
+T{
+.sp
+\f(CR\-\fP
+T}:T{
+.sp
+discarded by the cluster algorithm
+T}
+T{
+.sp
+\f(CR+\fP
+T}:T{
+.sp
+included by the combine algorithm
+T}
+T{
+.sp
+\f(CR#\fP
+T}:T{
+.sp
+backup (more than \f(CRtos maxclock\fP sources)
+T}
+T{
+.sp
+\f(CR*\fP
+T}:T{
+.sp
+system peer
+T}
+T{
+.sp
+\f(CRo\fP
+T}:T{
+.sp
+PPS peer (when the prefer peer is valid)
+T}
+.TE
+.sp
+.sp
+And the MRU list in the bottom window:
+.TS
+allbox tab(:);
+lt lt.
+T{
+.sp
+Column
+T}:T{
+.sp
+Description
+T}
+T{
+.sp
+\f(CRlstint\fP
+T}:T{
+.sp
+Interval in s between the receipt of the most recent packet from this
+address and the completion of the retrieval of the MRU list by \f(CRntpq\fP.
+T}
+T{
+.sp
+\f(CRavgint\fP
+T}:T{
+.sp
+Average interval in s between packets from this address.
+T}
+T{
+.sp
+\f(CRrstr\fP
+T}:T{
+.sp
+Restriction flags associated with this address. Most are copied
+unchanged from the matching \f(CRrestrict\fP command, however 0x400 (kod)
+and 0x20 (limited) flags are cleared unless the last packet from this
+address triggered a rate control response.
+T}
+T{
+.sp
+\f(CRr\fP
+T}:T{
+.sp
+Rate control indicator, either a period, \f(CRL\fP or \f(CRK\fP for no rate
+control response, rate limiting by discarding, or rate limiting with a
+KoD response, respectively.
+T}
+T{
+.sp
+\f(CRm\fP
+T}:T{
+.sp
+Packet mode.
+T}
+T{
+.sp
+\f(CRv\fP
+T}:T{
+.sp
+Packet version number.
+T}
+T{
+.sp
+\f(CRcount\fP
+T}:T{
+.sp
+Packets received from this address.
+T}
+T{
+.sp
+\f(CRscore\fP
+T}:T{
+.sp
+Packets per second (averaged with exponential decay).
+T}
+T{
+.sp
+\f(CRdrop\fP
+T}:T{
+.sp
+Packets dropped (or KoDed) from this address.
+T}
+T{
+.sp
+\f(CRrport\fP
+T}:T{
+.sp
+Source port of last packet from this address.
+T}
+T{
+.sp
+\f(CRremote address\fP
+T}:T{
+.sp
+DNS name, numeric address, or address followed by claimed DNS name
+which could not be verified in parentheses.
+T}
+.TE
+.sp
+.sp
+The refid field is as described under "Event Messages and Status
+Words" in the NTP documentation on the Web.
+.SH "COMMANDS"
+.sp
+a
+.RS 4
+Change peer display to apeers mode, showing association IDs.
+.RE
+.sp
+d
+.RS 4
+Toggle detail mode (some peer will be reverse\-video highlighted when on).
+.RE
+.sp
+h
+.RS 4
+Display help screen
+.RE
+.sp
+j
+.RS 4
+Select next peer (in select mode); arrow down also works.
+.RE
+.sp
+k
+.RS 4
+Select previous peer (in select mode); arrow up also works.
+.RE
+.sp
+m
+.RS 4
+Toggle MRUlist\-only mode; suppresses peer display when on.
+.RE
+.sp
+n
+.RS 4
+Toggle display of hostnames vs. IP addresses vs ntpd supplied names plus
+IP addresses or ntpd supplied names and hostnames (default is hostnames).
+.RE
+.sp
+o
+.RS 4
+Change peer display to opeers mode, showing destination address.
+.RE
+.sp
+p
+.RS 4
+Change peer display to default mode, showing refid.
+.RE
+.sp
+q
+.RS 4
+Cleanly terminate the program.
+.RE
+.sp
+r
+.RS 4
+Change to dextral mode, identical to \fIp\fP save that the refid, tally \(rs
+and remote clock are on the right.
+.RE
+.sp
+s
+.RS 4
+Toggle display of only reachable hosts (default is all hosts).
+.RE
+.sp
+u
+.RS 4
+Toggle display of units for time values. (default is off)
+.RE
+.sp
+w
+.RS 4
+Toggle wide mode.
+.RE
+.sp
+x
+.RS 4
+Cleanly terminate the program.
+.RE
+.sp
+<space>
+.RS 4
+Rotate through a/n/o/p display modes.
+.RE
+.sp
++
+.RS 4
+Increase debugging level.  Output goes to ntpmon.log
+.RE
+.sp
+\-
+.RS 4
+Decrease debugging level.
+.RE
+.sp
+?
+.RS 4
+Display help screen
+.RE
+.SH "OPTIONS"
+.sp
+\-d
+.RS 4
+Increase output debug message level
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+may appear multiple times
+.RE
+.RE
+.sp
+\-D
+.RS 4
+Set the output debug message level
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+may appear multiple times
+.RE
+.RE
+.sp
+\-h
+.RS 4
+Print a usage message.
+.RE
+.sp
+\-l
+.RS 4
+Logs debug messages to the provided filename
+.RE
+.sp
+\-n
+.RS 4
+Show IP addresses (vs. hostnames)
+.RE
+.sp
+\-s, \-\-srcname
+.RS 4
+Show srchost first then names and numbers
+.RE
+.sp
+\-S, \-\-srcnumber
+.RS 4
+Show srchost first then numbers
+.RE
+.sp
+\-u
+.RS 4
+Show units
+.RE
+.sp
+\-V
+.RS 4
+Display version and exit.
+.RE
+.SH "KNOWN BUGS"
+.sp
+When run in a terminal that does not allow UTF\-8 ntpmon will downgrade
+its unit display to a non\-unicode version. ntpmon has to interact with
+the curses and locale libraries, which prevents it from forcing the use
+of UTF\-8.
+.sp
+When querying a version of ntpd older than NTPsec 0.9.6, \f(CRntpmon\fP will
+appear to hang when monitoring hosts with extremely long MRU lists \-
+in particular, public pool hosts. Correct behavior requires a Mode 6
+protocol extension not yet present in those versions.
+.sp
+Even with this extension, monitoring a sufficiently high\-traffic
+server sometimes fails.
+.sp
+When using the \-u option, very old xterms may fail to render &mu;
+correctly.  If this happens, be sure your xterm is started with the \-u8
+option, or the \fIutf8\fP resource\(aq, and that your console font contains
+the UTF\-8 &mu; character.  Also confirm your LANG environment variable is
+set to a UTF\-8 language, like this: "export LANG=en_US.utf8".
+.sp
+Timestamp interpretation in this program is likely to fail in flaky
+ways if the local system clock has not already been approximately
+synchronized to UTC. Querying a server based in a different
+NTP era than the current one is especially likely to fail.
+.sp
+This program will behave in apparently buggy and only semi\-predictable
+ways when fetching MRU lists from \fIany\fP server with sufficiently high
+traffic.
+.sp
+The problem is fundamental. The Mode 6 protocol can\(cqt ship (and your
+client cannot accept) MRU records as fast as the daemon accepts
+incoming traffic. Under these circumstances, the daemon will
+repeatedly fail to ship an entire report, leading to long
+hangs as your client repeatedly re\-sends the request. Eventually the
+Mode 6 client library will throw an error indicating that a maximum
+number of restarts has been exceeded.
+.sp
+To avoid this problem, avoid monitoring over links that don\(cqt have
+enough capacity to handle the monitored server\(cqs \fIentire\fP NTP load.
+.SH "EXIT STATUS"
+.sp
+Always returns 0.
